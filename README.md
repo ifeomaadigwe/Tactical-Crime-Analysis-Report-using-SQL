@@ -9,3 +9,6 @@ The primary objective of this project is to develop a robust and user-friendly p
 Stakeholders expectations:
 - The TACTICAL CRIME Analysis project aims to provide insights that can inform the development and implementation of effective crime prevention policies and the desire for data-driven recommendations on allocating resources to areas most in need based on crime analysis
 - By leveraging the  datasets, advanced statistical and analytical tools to identify patterns, correlations, and trends within crime data, stakeholders can expect for a system that promotes transparency in crime data analysis, aiding in informed decision-making
+
+Link to the PowerBI to show dashboard - 
+https://app.powerbi.com/view?r=eyJrIjoiNTEyYzIzM2QtOGQyOC00NTBmLThmZTUtNDQzMDU4YzA5NDE1IiwidCI6ImRmODY3OWNkLWE4MGUtNDVkOC05OWFjLWM4M2VkN2ZmOTVhMCJ9
