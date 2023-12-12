@@ -6,7 +6,10 @@
 -- that enables the collection, preprocessing, analysis, and visualization of crime-related 
 -- datasets
 
--- I created 5 tables with PostgreSQL and retrieved informative details from the dataset
+-- Link to the PowerBI to show dashboard - https://app.powerbi.com/view?r=eyJrIjoiNTEyYzIzM2QtOGQyOC00NTBmLThmZTUtNDQzMDU4YzA5NDE1IiwidCI6ImRmODY3OWNkLWE4MGUtNDVkOC05OWFjLWM4M2VkN2ZmOTVhMCJ9
+
+
+---SQL DATABASE
 
 
 -- Create table 'Crime'
@@ -99,7 +102,6 @@ FROM crime_person;
 
 
 -- SQL QUERY --
-
 
 
 --- What is the total Crime?
