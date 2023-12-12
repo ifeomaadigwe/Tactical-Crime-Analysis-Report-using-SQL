@@ -1,0 +1,497 @@
+-- TACTICAL CRIME ANALYSIS
+
+-- This Challenge was gotten from FP20 Analytics Challenge 11 (November 2023)edition
+
+-- The primary objective of this project is to develop a robust and user-friendly platform 
+-- that enables the collection, preprocessing, analysis, and visualization of crime-related 
+-- datasets
+
+-- I created 5 tables with PostgreSQL and retrieved informative details from the dataset
+
+
+-- Create table 'Crime'
+CREATE TABLE Crime (
+    Crime_ID SERIAL PRIMARY KEY,
+    Crime_Date DATE,
+    Crime_Day INTEGER,
+    Crime_Month INTEGER,
+    Crime_text_month VARCHAR(20),
+    Crime_Year INTEGER,
+    Latitude FLOAT,
+    Longitude FLOAT,
+    Crime_type_ID INTEGER,
+    Resolved CHAR(5),
+    People_involved INTEGER,
+    Crime_date_time TIMESTAMP,
+    crime_time TIME
+);
+
+-- Create table 'People'
+CREATE TABLE People (
+    Person_ID SERIAL PRIMARY KEY,
+    Names VARCHAR(50),
+    Date_of_birth DATE,
+    Age INTEGER,
+    Gender VARCHAR(10),
+    Ethnicity VARCHAR(50)
+);
+
+-- Create table 'Crime_Role'
+CREATE TABLE Crime_Role (
+    Crime_Role_ID SERIAL PRIMARY KEY,
+    Role VARCHAR(20)
+);
+
+-- Create table 'Crime_Type'
+CREATE TABLE Crime_Type (
+    Crime_Type_ID SERIAL PRIMARY KEY,
+    Crime VARCHAR(50)
+);
+
+-- Create table 'Crime_Person'
+CREATE TABLE Crime_Person (
+    Person_ID INTEGER,
+    Crime_ID INTEGER,
+    People_Involved INTEGER,
+    Crime_Role_ID INTEGER,
+    PRIMARY KEY (Person_ID, Crime_ID),
+    FOREIGN KEY (Person_ID) REFERENCES People(Person_ID),
+    FOREIGN KEY (Crime_ID) REFERENCES Crime(Crime_ID),
+    FOREIGN KEY (Crime_Role_ID) REFERENCES Crime_Role(Crime_Role_ID)
+);
+
+-- To drop existing Table
+DROP TABLE IF EXISTS Crime_Type;
+
+-- CSV files can be imported from the desktop 
+-- OR
+-- Values can be inserted in the tables using the query below
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('1', 'Anti-Social Behaviour');
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('2', 'Bicycle Theft');
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('3', 'Burglary');
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('4', 'Criminal Damage and Arson');
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('5', 'Drugs and Illegal Substances');
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('6', 'Possession of Weapons');
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('7', 'Public Order');
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('8', 'Robbery and Mugging');
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('9', 'Shoplifting');
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('10', 'Theft from a Person');
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('11', 'Vehicle Crime');
+INSERT INTO crime_type(Crime_type_ID,Crime) VALUES ('12', 'Violence and Sexual Offences');
+
+
+-- To check the tables
+SELECT *
+FROM Crime;
+
+SELECT *
+FROM people;
+
+SELECT *
+FROM crime_role;
+
+SELECT *
+FROM crime_type;
+
+SELECT *
+FROM crime_person;
+
+
+
+-- SQL QUERY --
+
+
+
+--- What is the total Crime?
+SELECT COUNT(*) AS Total_Crime_Count
+FROM Crime;
+
+
+--- What are the total Resolved & Unresolved Cases
+SELECT 
+    SUM(CASE WHEN Resolved = 'Yes' THEN 1 ELSE 0 END) AS Resolved_Cases,
+    SUM(CASE WHEN Resolved = 'No' THEN 1 ELSE 0 END) AS Unresolved_Cases
+FROM Crime;
+
+
+--- Total People Involved
+SELECT 
+    SUM(People_Involved) AS Total_People_Involved
+FROM Crime_Person;
+
+
+-- Crime_Role Counts
+SELECT 
+    SUM(CASE WHEN Crime_role_ID = 1 THEN 1 ELSE 0 END) AS Total_Offenders,
+    SUM(CASE WHEN Crime_role_ID = 2 THEN 1 ELSE 0 END) AS Total_Victims,
+    SUM(CASE WHEN Crime_role_ID = 3 THEN 1 ELSE 0 END) AS Total_Accomplices,
+    SUM(CASE WHEN Crime_role_ID = 4 THEN 1 ELSE 0 END) AS Total_Informants,
+    SUM(CASE WHEN Crime_role_ID = 5 THEN 1 ELSE 0 END) AS Total_Witnesses
+FROM Crime_Person;
+
+
+
+--- What is the Clearance_Rate?
+SELECT 
+    (COUNT(CASE WHEN Resolved = 'Yes' THEN 1 END) * 100.0 / COUNT(*)) AS Clearance_Rate
+FROM Crime;
+
+-- How many Male are there in the dataset
+SELECT 
+    COUNT(*) AS Total_Male
+FROM People P
+JOIN Crime_Person CP ON P.Person_ID = CP.Person_ID
+WHERE P.Gender = 'Male';
+
+-- How many Male are there in the dataset
+SELECT 
+    COUNT(*) AS Total_Female
+FROM People P
+JOIN Crime_Person CP ON P.Person_ID = CP.Person_ID
+WHERE P.Gender = 'Female';
+
+--- How many Male and Female do we have(Gender-Count)?
+SELECT 
+    Gender,
+    COUNT(*) AS Gender_Count
+FROM People
+GROUP BY Gender;
+
+
+--- Crime Role by Gender
+SELECT 
+    P.Gender,
+    CR.Role AS Crime_Role,
+    COUNT(*) AS Role_Count
+FROM Crime_Person CP
+JOIN People P ON CP.Person_ID = P.Person_ID
+JOIN Crime_Role CR ON CP.Crime_role_ID = CR.Crime_role_ID
+GROUP BY P.Gender, CR.Role
+ORDER BY P.Gender, Role_Count DESC;
+
+
+--- Distribution of crime types by each gender
+SELECT 
+    P.Gender,
+    CT.Crime AS Crime_Type,
+    COUNT(*) AS Crime_Count
+FROM Crime C
+JOIN Crime_Type CT ON C.Crime_type_ID = CT.Crime_type_ID
+JOIN Crime_Person CP ON C.Crime_ID = CP.Crime_ID
+JOIN People P ON CP.Person_ID = P.Person_ID
+GROUP BY P.Gender, CT.Crime
+ORDER BY P.Gender, Crime_Count DESC;
+
+
+
+--- The total count and percentage of crime for each crime type
+SELECT 
+    CT.Crime AS Crime_Type,
+    COUNT(*) AS Total_Count,
+    ROUND((COUNT(*) * 100.0) / SUM(COUNT(*)) OVER (), 2) AS Percentage
+FROM Crime C
+JOIN Crime_Type CT ON C.Crime_type_ID = CT.Crime_type_ID
+GROUP BY CT.Crime
+ORDER BY Total_Count DESC;
+
+
+
+-- List All Crime Roles:
+SELECT *
+FROM Crime_Role;
+
+
+-- Retrieve Crime Details for a Specific Crime Type using the Crime Type ID:
+SELECT *
+FROM Crime
+WHERE Crime_ID = 2;
+
+
+
+-- Count Number of Crimes per Month:
+SELECT 
+    EXTRACT(MONTH FROM Crime_Date) AS Month,
+    COUNT(*) AS Crime_Count
+FROM Crime
+GROUP BY EXTRACT(MONTH FROM Crime_Date)
+ORDER BY Month;
+
+
+
+--- Group the Ages using CASE:
+SELECT 
+    CASE 
+        WHEN Age >= 0 AND Age <= 27 THEN '0-27'
+        WHEN Age > 28 AND Age <= 37 THEN '28-37'
+        WHEN Age > 38 AND Age <= 47 THEN '38-47'
+		WHEN Age > 48 AND Age <= 57 THEN '48-57'
+        ELSE '58 Plus'
+    END AS Age_Group,
+    COUNT(*) AS Total_Count
+FROM People
+GROUP BY Age_Group
+ORDER BY Age_Group;
+
+
+--- Group the Time using CASE:
+SELECT 
+    CASE 
+        WHEN Crime_time >= '00:00:00' AND Crime_time <= '05:00:00' THEN 'Morning'
+        WHEN Crime_time >= '06:00:00' AND Crime_time <= '11:00:00' THEN 'Afternoon'
+        WHEN Crime_time >= '12:00:00' AND Crime_time <= '17:00:00' THEN 'Evening'
+        ELSE 'Night'
+    END AS Time_group,
+    COUNT(*) AS Total_Count
+FROM Crime
+GROUP BY Time_group
+ORDER BY Time_group;
+
+
+
+
+-- Group the Crimes by Age groups
+SELECT 
+    CASE 
+       	WHEN Age >= 0 AND Age <= 27 THEN '0-27'
+        WHEN Age > 28 AND Age <= 37 THEN '28-37'
+        WHEN Age > 38 AND Age <= 47 THEN '38-47'
+		WHEN Age > 48 AND Age <= 57 THEN '48-57'
+        ELSE '58 Plus'
+    END AS Age_Group,
+    CT.Crime AS Crime_Type,
+    COUNT(*) AS Total_Count
+FROM People P
+JOIN Crime_Person CP ON P.Person_ID = CP.Person_ID
+JOIN Crime C ON CP.Crime_ID = C.Crime_ID
+JOIN Crime_Type CT ON C.Crime_type_ID = CT.Crime_type_ID
+GROUP BY Age_Group, Crime_Type
+ORDER BY Age_Group, Total_Count DESC;
+
+
+
+-- Retrieve People Involved in a Crime: Crime_ID 12 = 'Violence and Sexual Offences'
+SELECT People.*
+FROM People
+JOIN Crime_Person ON People.Person_ID = Crime_Person.Person_ID
+WHERE Crime_Person.Crime_ID = 12;
+
+
+
+-- What are the most widespread crime types in London?
+SELECT 
+    CT.Crime AS Crime_Type,
+    COUNT(C.Crime_Type_ID) AS Total_Count
+FROM Crime C
+JOIN Crime_Type CT ON C.Crime_Type_ID = CT.Crime_Type_ID
+GROUP BY CT.Crime
+ORDER BY Total_Count DESC;
+
+
+--  Are there any spikes in the crime rate in specific months or days?
+-- Crime Rate by Month:
+
+SELECT 
+    TO_CHAR(Crime_Date, 'Month') AS Crime_Month,
+    COUNT(*) AS Total_Crimes
+FROM Crime
+GROUP BY TO_CHAR(Crime_Date, 'Month')
+ORDER BY COUNT(*) DESC;
+
+
+SELECT 
+    crime_year AS Year,
+    crime_text_month AS Month,
+    COUNT(*) AS Total_Crimes
+FROM Crime
+GROUP BY Year, Month
+ORDER BY Year, Month DESC;
+
+
+
+SELECT 
+    EXTRACT(YEAR FROM Crime_Date) AS Year,
+    EXTRACT(MONTH FROM Crime_Date) AS Month,
+    COUNT(*) AS Total_Crimes
+FROM Crime
+GROUP BY Year, Month
+ORDER BY Year, Month;
+
+
+
+-- Crime Rate by Day:
+SELECT 
+    EXTRACT(DAY FROM Crime_Date) AS Crime_Day,
+    COUNT(*) AS Total_Crimes
+FROM Crime
+GROUP BY EXTRACT(DAY FROM Crime_Date)
+ORDER BY COUNT(*) DESC;
+
+
+
+-- Which London areas are potential hotspots for a specific crime type?
+SELECT 
+    C.Latitude,
+    C.Longitude,
+    COUNT(*) AS Total_Crimes
+FROM Crime C
+JOIN Crime_Type CT ON C.Crime_type_ID = CT.Crime_type_ID
+WHERE CT.Crime = 'Shoplifting' 
+GROUP BY C.Latitude, C.Longitude
+ORDER BY Total_Crimes DESC;
+
+
+SELECT 
+    CAST(CAST(C.Latitude * 1000 AS INTEGER) AS DECIMAL) / 1000 AS Rounded_Latitude,
+    CAST(CAST(C.Longitude * 1000 AS INTEGER) AS DECIMAL) / 1000 AS Rounded_Longitude,
+    COUNT(*) AS Total_Crimes
+FROM Crime C
+JOIN Crime_Type CT ON C.Crime_type_ID = CT.Crime_type_ID
+WHERE CT.Crime = 'Violence and Sexual Offences' 
+GROUP BY Rounded_Latitude, Rounded_Longitude
+ORDER BY Total_Crimes DESC;
+
+
+-- Names of person with the highest crime records
+SELECT 
+    P.Names AS Person_Name,
+    C.Crime_ID,
+    CT.Crime AS Crime_Type
+FROM People P
+JOIN Crime_Person CP ON P.Person_ID = CP.Person_ID
+JOIN Crime C ON CP.Crime_ID = C.Crime_ID
+JOIN Crime_Type CT ON C.Crime_type_ID = CT.Crime_type_ID;
+
+
+
+
+-- Names of person with the highest crime records
+SELECT 
+    P.Person_ID,
+    P.Names AS Names,
+    COUNT(*) AS Total_no_of_Crimes
+FROM Crime_Person CP
+JOIN People P ON CP.Person_ID = P.Person_ID
+GROUP BY P.Person_ID, P.Names
+ORDER BY Total_no_of_Crimes DESC
+LIMIT 10;
+
+
+
+-- What is the count of the Crime Role_Distribution
+SELECT 
+    CR.Role AS Crime_Role,
+    COUNT(*) AS Role_Count
+FROM Crime_Person CP
+JOIN Crime_Role CR ON CP.Crime_role_ID = CR.Crime_role_ID
+GROUP BY CR.Role
+ORDER BY Role_Count DESC;
+
+
+--- Total number of Crimes by Month and year
+SELECT crime_text_month AS Months, crime_year AS Year, COUNT(*) AS Total_Crimes
+FROM crime
+GROUP BY crime_text_month, crime_year
+ORDER BY crime_text_month, crime_year;
+
+
+--- Total number of Crimes by Year and month
+SELECT crime_text_month AS Months, crime_year AS Year, COUNT(*) AS Total_Crimes
+FROM crime
+GROUP BY crime_year, crime_text_month
+ORDER BY crime_text_month, crime_year;
+
+
+
+
+SELECT 
+    CT.Crime AS Crime_Type,
+    crime_text_month AS Months,
+    COUNT(*) AS Total_Crimes
+FROM Crime C
+JOIN Crime_Type CT ON C.Crime_type_ID = CT.Crime_type_ID
+GROUP BY Crime_Type, Months
+ORDER BY Crime_Type, Months;
+
+
+SELECT 
+    CT.Crime AS Crime_Type,
+    EXTRACT(MONTH FROM C.Crime_Date) AS Crime_Month,
+    COUNT(*) AS Total_Crimes
+FROM Crime C
+JOIN Crime_Type CT ON C.Crime_type_ID = CT.Crime_type_ID
+GROUP BY Crime_Type, Crime_Month
+ORDER BY Crime_Type, Crime_Month;
+
+
+--- Total number of Crimes by Year
+SELECT 
+    EXTRACT(YEAR FROM Crime_Date) AS Crime_Year,
+    COUNT(*) AS Total_Crimes
+FROM Crime
+GROUP BY EXTRACT(YEAR FROM Crime_Date)
+ORDER BY EXTRACT(YEAR FROM Crime_Date);
+
+
+
+--- Percentage Distribution of Crimes by Year
+SELECT 
+    EXTRACT(YEAR FROM Crime_Date) AS Crime_Year,
+    ROUND((COUNT(*) * 100.0) / SUM(COUNT(*)) OVER (), 2) AS Crime_Percentage
+FROM Crime
+GROUP BY EXTRACT(YEAR FROM Crime_Date)
+ORDER BY EXTRACT(YEAR FROM Crime_Date);
+
+
+
+-- Which Crime is most common in each year under review
+-- Group the crime_type and crime year
+SELECT 
+    EXTRACT(YEAR FROM Crime.Crime_Date) AS Crime_Year,
+    Crime.Crime_type_ID,
+    Crime_type.Crime AS Crime_Type,
+    COUNT(*) AS Total_Crimes
+FROM Crime
+JOIN Crime_type ON Crime.Crime_type_ID = Crime_type.Crime_type_ID
+GROUP BY EXTRACT(YEAR FROM Crime.Crime_Date), Crime.Crime_type_ID, Crime_type.Crime
+ORDER BY EXTRACT(YEAR FROM Crime.Crime_Date), Total_Crimes DESC;
+
+
+
+-- Group the ethnicity by crime and find the ethnicity associated with the most crimes
+SELECT 
+    P.Ethnicity,
+    COUNT(CP.Crime_ID) AS Total_Crimes
+FROM People P
+JOIN Crime_Person CP ON P.Person_ID = CP.Person_ID
+GROUP BY P.Ethnicity
+ORDER BY Total_Crimes DESC
+LIMIT 10;
+
+
+
+-- Group the ethnicity by crime type to find the ethnicity associated with each 'CRIME TYPE'
+SELECT 
+    CT.Crime AS Crime_Type,
+    P.Ethnicity,
+    COUNT(CP.Crime_ID) AS Total_Crimes
+FROM Crime_Type CT
+JOIN Crime C ON CT.Crime_type_ID = C.Crime_type_ID
+JOIN Crime_Person CP ON C.Crime_ID = CP.Crime_ID
+JOIN People P ON CP.Person_ID = P.Person_ID
+GROUP BY CT.Crime, P.Ethnicity
+ORDER BY CT.Crime, Total_Crimes DESC;
+
+
+SELECT COUNT(Person_ID) AS Total_People_Involved
+FROM Crime_Person;
+
+-- Group the ethnicity by crime role and find the ethnicity associated with each 'CRIME ROLE'
+SELECT 
+    CR.Role AS Crime_Role,
+    P.Ethnicity,
+    COUNT(CP.Crime_ID) AS Total_Crimes
+FROM Crime_Role CR
+JOIN Crime_Person CP ON CR.Crime_role_ID = CP.Crime_role_ID
+JOIN People P ON CP.Person_ID = P.Person_ID
+GROUP BY CR.Role, P.Ethnicity
+ORDER BY CR.Role, Total_Crimes DESC;
